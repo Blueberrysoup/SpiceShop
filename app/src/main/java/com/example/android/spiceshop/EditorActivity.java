@@ -234,15 +234,28 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         }
     };
 
+    // Tried solution found here: https://discussions.udacity.com/t/inventory-app-image-permission-issue-need-help/305819/27:
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (resultCode != RESULT_OK) {
-            return;
-        }
-        if (requestCode == PICK_IMAGE) {
-            if (data != null) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == PICK_IMAGE && (resultCode == RESULT_OK)) {
+            try {
                 mImageUri = data.getData();
+                Log.i(LOG_TAG, "Uri: " + mImageUri.toString());
+
+                int takeFlags = data.getFlags();
+                takeFlags &= (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+
+                try {
+                    getContentResolver().takePersistableUriPermission(mImageUri, takeFlags);
+                }
+                catch (SecurityException e){
+                    e.printStackTrace();
+                }
                 mProductImageView.setImageBitmap(getBitmapFromUri(mImageUri));
+
+            } catch (Exception e) {
+                e.printStackTrace();
             }
         }
     }
