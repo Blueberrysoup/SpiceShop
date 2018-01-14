@@ -13,7 +13,8 @@ public class SpiceContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
     public static final String PATH_SPICE = "spices";
 
-    private SpiceContract(){ }
+    private SpiceContract() {
+    }
 
     public static final class Spices implements BaseColumns {
         public static final Uri CONTENT_URI = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_SPICE);

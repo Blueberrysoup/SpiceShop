@@ -46,8 +46,8 @@ import static com.example.android.spiceshop.data.SpiceProvider.LOG_TAG;
 public class EditorActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int EXISTING_SPICE_LOADER = 0;
-    private boolean mSpiceHasChanged = false;
     private static final int PICK_IMAGE = 1;
+    private boolean mSpiceHasChanged = false;
     private Uri mImageUri;
 
     private EditText mNameEditText;
@@ -58,6 +58,13 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     private ImageView mProductImageView;
 
     private Uri mCurrentSpiceUri;
+    private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
+        @Override
+        public boolean onTouch(View view, MotionEvent motionEvent) {
+            mSpiceHasChanged = true;
+            return false;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,7 +86,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         Button decreaseButton = (Button) findViewById(R.id.button_decrease_quantity);
         Button selectImageButton = (Button) findViewById(R.id.button_image_picker);
 
-        if (mCurrentSpiceUri == null){
+        if (mCurrentSpiceUri == null) {
             setTitle(getString(R.string.editor_activity_title_new_spice));
             orderMoreButton.setVisibility(View.INVISIBLE);
             mQuantityEditText.setText("0");
@@ -94,7 +101,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                     Intent email = new Intent(Intent.ACTION_SENDTO);
                     email.setData(Uri.parse("mailto:"));
                     email.putExtra(Intent.EXTRA_EMAIL, new String[]{supplierEmail});
-                    email.putExtra(Intent.EXTRA_SUBJECT, "Order");
+                    email.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject));
                     startActivity(email);
                 }
             });
@@ -117,9 +124,12 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             @Override
             public void onClick(View view) {
                 Intent intent = new Intent();
-                intent.setAction(Intent.ACTION_GET_CONTENT);
+                intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                intent.addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                intent.addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                 intent.setType("image/*");
-                startActivityForResult(Intent.createChooser(intent, "Select image"), PICK_IMAGE);
+                startActivityForResult(Intent.createChooser(intent, getString(R.string.selectimage)), PICK_IMAGE);
             }
         });
 
@@ -139,7 +149,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                 COLUMN_SPICE_PRICE,
                 COLUMN_SPICE_QUANTITY,
                 COLUMN_SPICE_SUPPLIER,
-                COLUMN_SPICE_IMAGE };
+                COLUMN_SPICE_IMAGE};
 
         return new CursorLoader(this, mCurrentSpiceUri, projection, null, null, null);
     }
@@ -163,6 +173,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             int quantity = cursor.getInt(quantityColumnIndex);
             final String supplier = cursor.getString(supplierColumnIndex);
             String imageUriString = cursor.getString(productImageIndex);
+            mImageUri = Uri.parse(imageUriString);
 
             mNameEditText.setText(name);
             mDescriptionEditText.setText(description);
@@ -170,6 +181,7 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             mQuantityEditText.setText(Integer.toString(quantity));
             mSupplierEditText.setText(supplier);
             mProductImageView.setImageBitmap(getBitmapFromUri(Uri.parse(imageUriString)));
+
         }
     }
 
@@ -202,8 +214,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_save:
-                saveSpice();
-                finish();
+                if (saveSpice())
+                    finish();
                 return true;
             case R.id.action_delete:
                 showDeleteConfirmationDialog();
@@ -226,30 +238,21 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         return super.onOptionsItemSelected(item);
     }
 
-    private View.OnTouchListener mTouchListener = new View.OnTouchListener() {
-        @Override
-        public boolean onTouch(View view, MotionEvent motionEvent) {
-            mSpiceHasChanged = true;
-            return false;
-        }
-    };
-
-    // Tried solution found here: https://discussions.udacity.com/t/inventory-app-image-permission-issue-need-help/305819/27:
+    // Solution found here: https://discussions.udacity.com/t/inventory-app-image-permission-issue-need-help/305819/27
+    // and here: https://stackoverflow.com/questions/25414352/how-to-persist-permission-in-android-api-19-kitkat:
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMAGE && (resultCode == RESULT_OK)) {
             try {
                 mImageUri = data.getData();
-                Log.i(LOG_TAG, "Uri: " + mImageUri.toString());
 
                 int takeFlags = data.getFlags();
                 takeFlags &= (Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
 
                 try {
                     getContentResolver().takePersistableUriPermission(mImageUri, takeFlags);
-                }
-                catch (SecurityException e){
+                } catch (SecurityException e) {
                     e.printStackTrace();
                 }
                 mProductImageView.setImageBitmap(getBitmapFromUri(mImageUri));
@@ -266,9 +269,12 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         if (uri == null || uri.toString().isEmpty())
             return null;
 
-        // Get the dimensions of the View
-        int targetW = mProductImageView.getWidth();
-        int targetH = mProductImageView.getHeight();
+        // I can't get getWidth/getHeight to return anything else than 0
+        // so I use the same value as <dimen name="imageview_width">160dp</dimen>
+        //int targetW = mProductImageView.getWidth();
+        //int targetH = mProductImageView.getHeight();
+        int targetW = 160;
+        int targetH = 160;
 
         InputStream input = null;
         try {
@@ -289,7 +295,6 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             // Decode the image file into a Bitmap sized to fill the View
             bmOptions.inJustDecodeBounds = false;
             bmOptions.inSampleSize = scaleFactor;
-            //bmOptions.inPurgeable = true;
 
             input = this.getContentResolver().openInputStream(uri);
             Bitmap bitmap = BitmapFactory.decodeStream(input, null, bmOptions);
@@ -326,15 +331,33 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         alertDialog.show();
     }
 
-    private void saveSpice(){
+    private boolean saveSpice() {
         String nameString = mNameEditText.getText().toString().trim();
         String descriptionString = mDescriptionEditText.getText().toString().trim();
         String priceString = mPriceEditText.getText().toString();
         String quantityString = mQuantityEditText.getText().toString();
         String supplierString = mSupplierEditText.getText().toString().trim();
+        String imageString;
 
+        // Price and quantity are allowed to be blank - if so, the default to 0.00 and 0
         float priceFloat = 0.00f;
         int quantityInt = 0;
+
+        // If nothing has changed
+        if (TextUtils.isEmpty(nameString) && TextUtils.isEmpty(descriptionString) && TextUtils.isEmpty(priceString) && TextUtils.isEmpty(quantityString) && TextUtils.isEmpty(supplierString) && TextUtils.isEmpty(mImageUri.toString()))
+            return false;
+
+        // Empty names are not allowed
+        if (TextUtils.isEmpty(nameString)) {
+            mNameEditText.setError("Enter a name for the spice");
+            return false;
+        }
+
+        // Empty image is allowed
+        if (mImageUri == null)
+            imageString = "";
+        else
+            imageString = mImageUri.toString();
 
         if (!TextUtils.isEmpty(priceString))
             priceFloat = Float.parseFloat(priceString);
@@ -348,24 +371,26 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         values.put(COLUMN_SPICE_PRICE, priceFloat);
         values.put(COLUMN_SPICE_QUANTITY, quantityInt);
         values.put(COLUMN_SPICE_SUPPLIER, supplierString);
-        values.put(COLUMN_SPICE_IMAGE, mImageUri.toString());
+        values.put(COLUMN_SPICE_IMAGE, imageString);
 
-        if (TextUtils.isEmpty(nameString) && TextUtils.isEmpty(descriptionString) && TextUtils.isEmpty(priceString) && TextUtils.isEmpty(quantityString) && TextUtils.isEmpty(supplierString) && TextUtils.isEmpty(mImageUri.toString()))
-            return;
-        if (mCurrentSpiceUri == null) {
-            Uri newUri = getContentResolver().insert(CONTENT_URI, values);
-            if (newUri == null)
-                Toast.makeText(this, R.string.ErrorSavingSpices, Toast.LENGTH_SHORT).show();
-            else
-                Toast.makeText(this, R.string.SpicesSaved, Toast.LENGTH_SHORT).show();
+        try {
+            if (mCurrentSpiceUri == null) {
+                Uri newUri = getContentResolver().insert(CONTENT_URI, values);
+                if (newUri == null)
+                    Toast.makeText(this, R.string.ErrorSavingSpices, Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(this, R.string.SpicesSaved, Toast.LENGTH_SHORT).show();
+            } else {
+                int rowsUpdated = getContentResolver().update(mCurrentSpiceUri, values, null, null);
+                if (rowsUpdated == -1)
+                    Toast.makeText(this, R.string.ErrorSavingSpices, Toast.LENGTH_SHORT).show();
+                else
+                    Toast.makeText(this, R.string.SpicesSaved, Toast.LENGTH_SHORT).show();
+            }
+        } catch (IllegalArgumentException e) {
+            Toast.makeText(this, "Check your input. " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
-        else {
-            int rowsUpdated = getContentResolver().update(mCurrentSpiceUri, values, null, null);
-            if (rowsUpdated == -1)
-                Toast.makeText(this, R.string.ErrorSavingSpices, Toast.LENGTH_SHORT).show();
-            else
-                Toast.makeText(this, R.string.SpicesSaved, Toast.LENGTH_SHORT).show();
-        }
+        return true;
     }
 
     private void showDeleteConfirmationDialog() {

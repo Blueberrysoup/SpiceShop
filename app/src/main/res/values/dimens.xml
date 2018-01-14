@@ -14,13 +14,13 @@
     <dimen name="fab_margin">16dp</dimen>
 
     <!-- Common margin value used throughout the app -->
-    <dimen name="activity_margin">16dp</dimen>
+    <dimen name="activity_margin">8dp</dimen>
 
     <!-- Height of each list item -->
-    <dimen name="list_item_height">88dp</dimen>
+    <dimen name="list_item_height">72dp</dimen>
 
     <!-- Width of imageview -->
-    <dimen name="imageview_width">88dp</dimen>
+    <dimen name="imageview_width">160dp</dimen>
 
 </resources>
 

@@ -24,17 +24,16 @@ import static com.example.android.spiceshop.data.SpiceContract.Spices._ID;
 
 public class SpiceProvider extends ContentProvider {
     public static final String LOG_TAG = SpiceProvider.class.getSimpleName();
-    private SpiceDBHelper mDbHelper;
-
     private static final int SPICES = 100;
     private static final int SPICE_ID = 101;
-
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     static {
         sUriMatcher.addURI(SpiceContract.CONTENT_AUTHORITY, "spices", SPICES);
         sUriMatcher.addURI(SpiceContract.CONTENT_AUTHORITY, "spices/#", SPICE_ID);
     }
+
+    private SpiceDBHelper mDbHelper;
 
     @Override
     public boolean onCreate() {
@@ -56,7 +55,7 @@ public class SpiceProvider extends ContentProvider {
                 break;
             case SPICE_ID:
                 selection = _ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
 
                 cursor = database.query(TABLE_NAME, projection, selection, selectionArgs,
                         null, null, sortOrder);
@@ -117,7 +116,7 @@ public class SpiceProvider extends ContentProvider {
                 return updateSpice(uri, contentValues, selection, selectionArgs);
             case SPICE_ID:
                 selection = _ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 return updateSpice(uri, contentValues, selection, selectionArgs);
             default:
                 throw new IllegalArgumentException("Update is not supported for " + uri);
@@ -125,6 +124,7 @@ public class SpiceProvider extends ContentProvider {
     }
 
     private int updateSpice(Uri uri, ContentValues values, String selection, String[] selectionArgs) {
+
         if (values.containsKey(COLUMN_SPICE_NAME)) {
             String name = values.getAsString(COLUMN_SPICE_NAME);
             if (TextUtils.isEmpty(name)) {
@@ -139,7 +139,6 @@ public class SpiceProvider extends ContentProvider {
         }
 
         if (values.containsKey(COLUMN_SPICE_QUANTITY)) {
-            // Check that the weight is greater than or equal to 0 kg
             Integer quantity = values.getAsInteger(COLUMN_SPICE_QUANTITY);
             if (quantity != null && quantity < 0) {
                 throw new IllegalArgumentException("Quantity can't be negative");
@@ -173,7 +172,7 @@ public class SpiceProvider extends ContentProvider {
                 return rowsDeleted;
             case SPICE_ID:
                 selection = _ID + "=?";
-                selectionArgs = new String[] { String.valueOf(ContentUris.parseId(uri)) };
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
                 rowsDeleted = database.delete(TABLE_NAME, selection, selectionArgs);
                 if (rowsDeleted != 0)
                     getContext().getContentResolver().notifyChange(uri, null);
@@ -195,4 +194,5 @@ public class SpiceProvider extends ContentProvider {
                 throw new IllegalStateException("Unknown URI " + uri + " with match " + match);
         }
     }
+
 }

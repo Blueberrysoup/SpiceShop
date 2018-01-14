@@ -39,24 +39,20 @@ public class SpiceCursorAdapter extends CursorAdapter {
         TextView nameTextView = (TextView) view.findViewById(R.id.name);
         TextView quantityTextView = (TextView) view.findViewById(R.id.quantity);
         TextView priceTextView = (TextView) view.findViewById(R.id.price);
-        //ImageView productImageView = (ImageView) view.findViewById(R.id.spice_image);
 
         int idColumnIndex = cursor.getColumnIndex(_ID);
         int nameColumnIndex = cursor.getColumnIndex(COLUMN_SPICE_NAME);
         int quantityColumnIndex = cursor.getColumnIndex(COLUMN_SPICE_QUANTITY);
         int priceColumnIndex = cursor.getColumnIndex(COLUMN_SPICE_PRICE);
-        //int imageColumnIndex = cursor.getColumnIndex(COLUMN_SPICE_IMAGE);
 
         final int spiceId = cursor.getInt(idColumnIndex);
         String spiceName = cursor.getString(nameColumnIndex);
         final int spiceQuantity = cursor.getInt(quantityColumnIndex);
         float spicePrice = cursor.getFloat(priceColumnIndex);
-        //String spiceImageString = cursor.getString(imageColumnIndex);
 
         nameTextView.setText(spiceName);
         quantityTextView.setText(String.valueOf(spiceQuantity));
         priceTextView.setText(String.format("%.2f", spicePrice));
-        //productImageView.setImageBitmap(getBitmapFromUri(Uri.parse(spiceImageString)));
 
         Button saleButton = (Button) view.findViewById(R.id.sale);
         saleButton.setOnClickListener(new View.OnClickListener() {

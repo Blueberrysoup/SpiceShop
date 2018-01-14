@@ -22,14 +22,15 @@ public class SpiceDBHelper extends SQLiteOpenHelper {
             + SpiceContract.Spices.COLUMN_SPICE_IMAGE + " TEXT, "
             + SpiceContract.Spices.COLUMN_SPICE_SUPPLIER + " TEXT);";
 
-    public SpiceDBHelper(Context context){
+    public SpiceDBHelper(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
 
-    public void onCreate(SQLiteDatabase db){
+    public void onCreate(SQLiteDatabase db) {
         db.execSQL(SQL_CREATE_SPICES_TABLE);
     }
 
-    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion){   }
+    public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+    }
 
 }
