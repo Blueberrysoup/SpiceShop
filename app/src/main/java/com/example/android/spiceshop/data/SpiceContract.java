@@ -8,7 +8,7 @@ import android.provider.BaseColumns;
  * Created by Carina on 2018-01-10.
  */
 
-public class SpiceContract {
+public final class SpiceContract {
     public static final String CONTENT_AUTHORITY = "com.example.android.spiceshop";
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
     public static final String PATH_SPICE = "spices";
@@ -28,7 +28,6 @@ public class SpiceContract {
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_SPICE;
 
         //Column names
-        public static final String _ID = "_id";
         public static final String COLUMN_SPICE_NAME = "name";
         public static final String COLUMN_SPICE_DESC = "description";
         public static final String COLUMN_SPICE_PRICE = "price";

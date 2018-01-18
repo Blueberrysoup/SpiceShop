@@ -60,5 +60,10 @@
     <string name="stock">Stock</string>
 
     <string name="sale">Sale</string>
+
     <string name="email_subject">Order</string>
+
+    <string name="email_message1">Please send us 100 more of:</string>
+
+    <string name="email_message2">Regards, Spice Shop</string>
 </resources>

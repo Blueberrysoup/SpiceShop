@@ -102,6 +102,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
                     email.setData(Uri.parse("mailto:"));
                     email.putExtra(Intent.EXTRA_EMAIL, new String[]{supplierEmail});
                     email.putExtra(Intent.EXTRA_SUBJECT, getString(R.string.email_subject));
+                    String message = getString(R.string.email_message1) + " " + mNameEditText.getText().toString() + "\n\n" + getString(R.string.email_message2);
+                    email.putExtra(Intent.EXTRA_TEXT, message);
                     startActivity(email);
                 }
             });
@@ -117,7 +119,8 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
             @Override
             public void onClick(View view) {
                 int currentQuantity = Integer.parseInt(mQuantityEditText.getText().toString());
-                mQuantityEditText.setText(String.valueOf(--currentQuantity));
+                if (currentQuantity > 0)
+                    mQuantityEditText.setText(String.valueOf(--currentQuantity));
             }
         });
         selectImageButton.setOnClickListener(new View.OnClickListener() {
@@ -347,20 +350,32 @@ public class EditorActivity extends AppCompatActivity implements LoaderManager.L
         if (TextUtils.isEmpty(nameString) && TextUtils.isEmpty(descriptionString) && TextUtils.isEmpty(priceString) && TextUtils.isEmpty(quantityString) && TextUtils.isEmpty(supplierString) && TextUtils.isEmpty(mImageUri.toString()))
             return false;
 
-        // Empty names are not allowed
+        // Empty name is not allowed
         if (TextUtils.isEmpty(nameString)) {
             mNameEditText.setError("Enter a name for the spice");
             return false;
         }
 
-        // Empty image is allowed
+        // Empty description is not allowed
+        if (TextUtils.isEmpty(descriptionString)) {
+            mDescriptionEditText.setError("Enter a description for the spice");
+            return false;
+        }
+
+        // Empty supplier email is not allowed
+        if (TextUtils.isEmpty(supplierString)) {
+            mSupplierEditText.setError("Enter an email address for the supplier");
+            return false;
+        }
+
+        // Uploading a product image is optional
         if (mImageUri == null)
             imageString = "";
         else
             imageString = mImageUri.toString();
 
         if (!TextUtils.isEmpty(priceString))
-            priceFloat = Float.parseFloat(priceString);
+            priceFloat = Float.parseFloat(priceString.replace(",","."));
 
         if (!TextUtils.isEmpty(quantityString))
             quantityInt = Integer.parseInt(quantityString);
